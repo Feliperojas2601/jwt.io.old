@@ -50,7 +50,12 @@
                 <div class="decoded-part header-part">
                     <div class="part-label">HEADER: ALGORITHM & TOKEN TYPE</div>
                     <div class="json-content">
-                        <pre class="json-display">{{headerJson()}}</pre>
+                        <textarea 
+                            class="json-input"
+                            [value]="headerJson()"
+                            (input)="onHeaderInput($event)"
+                            placeholder="Header JSON">
+                        </textarea>
                     </div>
                 </div>
                 <div class="decoded-part payload-part">
@@ -113,8 +118,13 @@
                             <div class="signature-status" 
                                  [class.valid]="signatureStatus().isValid === true"
                                  [class.invalid]="signatureStatus().isValid === false"
-                                 [class.neutral]="signatureStatus().isValid === null">
-                                <span class="status-message">{{signatureStatus().message}}</span>
+                                 [class.neutral]="signatureStatus().isValid === null"
+                                 [class.signing]="isSigning()">
+                                @if (isSigning()) {
+                                    <span class="status-message">🔄 Signing token...</span>
+                                } @else {
+                                    <span class="status-message">{{signatureStatus().message}}</span>
+                                }
                             </div>
                         </div>
                     </div>

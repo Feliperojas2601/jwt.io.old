@@ -15,9 +15,9 @@ export class App {
     protected secret = signal('your-256-bit-secret');
     protected isSecretBase64 = signal(false);
     protected signatureVerificationResult = signal<{isValid: boolean | null, message: string}>({ isValid: null, message: 'Enter secret to verify' });
+    protected isSigning = signal(false);
 
     constructor() {
-        // Effect para verificar la firma cuando cambie el token o el secret
         effect(() => {
             const token = this.encodedJwt();
             const secret = this.secret();
@@ -256,6 +256,47 @@ export class App {
         return bytes.buffer;
     }
 
+    // Función para generar firma HMAC usando Web Crypto API
+    private async generateHmacSignature(data: string, secret: string): Promise<string> {
+        try {
+            // Obtener el secret como ArrayBuffer
+            const secretBuffer = this.isSecretBase64() 
+                ? this.base64ToArrayBuffer(secret)
+                : this.stringToArrayBuffer(secret);
+
+            // Crear la clave HMAC
+            const key = await crypto.subtle.importKey(
+                'raw',
+                secretBuffer,
+                { name: 'HMAC', hash: 'SHA-256' },
+                false,
+                ['sign']
+            );
+
+            // Generar la firma
+            const signature = await crypto.subtle.sign(
+                'HMAC',
+                key,
+                this.stringToArrayBuffer(data)
+            );
+
+            // Convertir a base64url
+            const signatureArray = new Uint8Array(signature);
+            let binaryString = '';
+            for (let i = 0; i < signatureArray.byteLength; i++) {
+                binaryString += String.fromCharCode(signatureArray[i]);
+            }
+            
+            return btoa(binaryString)
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=/g, '');
+
+        } catch (error) {
+            throw new Error('Failed to generate signature');
+        }
+    }
+
     // Función para verificar firma HMAC usando Web Crypto API
     private async verifyHmacSignature(data: string, signature: string, secret: string): Promise<boolean> {
         try {
@@ -302,20 +343,92 @@ export class App {
     }
 
     protected onPayloadInput(event: Event): void {
+        const target = event.target as HTMLTextAreaElement;
+        const newPayloadJson = target.value;
+        
         try {
-            const target = event.target as HTMLTextAreaElement;
-            const newPayloadJson = target.value;
+            // Validar que el JSON sea válido
             const payloadObj = JSON.parse(newPayloadJson);
+            
+            // Obtener las partes actuales del JWT
             const parts = this.encodedJwt().split('.');
             if (parts.length === 3) {
                 const headerPart = parts[0];
                 const newPayloadPart = this.base64UrlEncode(JSON.stringify(payloadObj));
-                const signaturePart = parts[2];
-                const newJwt = `${headerPart}.${newPayloadPart}.${signaturePart}`;
-                this.encodedJwt.set(newJwt);
+                
+                // Generar nueva firma si tenemos un secret
+                const secret = this.secret().trim();
+                if (secret) {
+                    const dataToSign = `${headerPart}.${newPayloadPart}`;
+                    
+                    // Indicar que estamos firmando
+                    this.isSigning.set(true);
+                    
+                    // Generar nueva firma de forma asíncrona
+                    this.generateHmacSignature(dataToSign, secret)
+                        .then(newSignature => {
+                            const newJwt = `${headerPart}.${newPayloadPart}.${newSignature}`;
+                            this.encodedJwt.set(newJwt);
+                        })
+                        .catch(error => {
+                            console.warn('Failed to sign token:', error);
+                            // Si falla la firma, usar la signature anterior (será inválida)
+                            const newJwt = `${headerPart}.${newPayloadPart}.${parts[2]}`;
+                            this.encodedJwt.set(newJwt);
+                        })
+                        .finally(() => {
+                            this.isSigning.set(false);
+                        });
+                } else {
+                    // Sin secret, mantener la signature anterior (será inválida)
+                    const newJwt = `${headerPart}.${newPayloadPart}.${parts[2]}`;
+                    this.encodedJwt.set(newJwt);
+                }
             }
         } catch (error) {
             console.warn('Invalid JSON in payload');
+        }
+    }
+
+    protected onHeaderInput(event: Event): void {
+        const target = event.target as HTMLTextAreaElement;
+        const newHeaderJson = target.value;
+        
+        try {
+            // Validar que el JSON sea válido
+            const headerObj = JSON.parse(newHeaderJson);
+            
+            // Obtener las partes actuales del JWT
+            const parts = this.encodedJwt().split('.');
+            if (parts.length === 3) {
+                const newHeaderPart = this.base64UrlEncode(JSON.stringify(headerObj));
+                const payloadPart = parts[1];
+                
+                // Generar nueva firma si tenemos un secret
+                const secret = this.secret().trim();
+                if (secret) {
+                    const dataToSign = `${newHeaderPart}.${payloadPart}`;
+                    
+                    // Generar nueva firma de forma asíncrona
+                    this.generateHmacSignature(dataToSign, secret)
+                        .then(newSignature => {
+                            const newJwt = `${newHeaderPart}.${payloadPart}.${newSignature}`;
+                            this.encodedJwt.set(newJwt);
+                        })
+                        .catch(error => {
+                            console.warn('Failed to sign token:', error);
+                            // Si falla la firma, usar la signature anterior (será inválida)
+                            const newJwt = `${newHeaderPart}.${payloadPart}.${parts[2]}`;
+                            this.encodedJwt.set(newJwt);
+                        });
+                } else {
+                    // Sin secret, mantener la signature anterior (será inválida)
+                    const newJwt = `${newHeaderPart}.${payloadPart}.${parts[2]}`;
+                    this.encodedJwt.set(newJwt);
+                }
+            }
+        } catch (error) {
+            console.warn('Invalid JSON in header');
         }
     }
 
@@ -326,11 +439,47 @@ export class App {
 
     protected onSecretInput(event: Event): void {
         const target = event.target as HTMLInputElement;
-        this.secret.set(target.value);
+        const newSecret = target.value;
+        this.secret.set(newSecret);
+        
+        // Re-firmar el token si tenemos un JWT válido y un secret
+        if (newSecret.trim() && this.isValidJwt()) {
+            this.resignToken();
+        }
+    }
+
+    // Método para re-firmar el token actual
+    private resignToken(): void {
+        const parts = this.encodedJwt().split('.');
+        if (parts.length === 3) {
+            const secret = this.secret().trim();
+            if (secret) {
+                const dataToSign = `${parts[0]}.${parts[1]}`;
+                
+                this.isSigning.set(true);
+                
+                this.generateHmacSignature(dataToSign, secret)
+                    .then(newSignature => {
+                        const newJwt = `${parts[0]}.${parts[1]}.${newSignature}`;
+                        this.encodedJwt.set(newJwt);
+                    })
+                    .catch(error => {
+                        console.warn('Failed to re-sign token:', error);
+                    })
+                    .finally(() => {
+                        this.isSigning.set(false);
+                    });
+            }
+        }
     }
 
     protected onSecretBase64Change(event: Event): void {
         const target = event.target as HTMLInputElement;
         this.isSecretBase64.set(target.checked);
+        
+        // Re-firmar el token cuando cambie el tipo de encoding del secret
+        if (this.secret().trim() && this.isValidJwt()) {
+            this.resignToken();
+        }
     }
 }
