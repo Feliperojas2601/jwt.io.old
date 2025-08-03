@@ -333,36 +333,6 @@ body {
     margin-bottom: 1rem;
 }
 
-.algorithm {
-    color: #06ffa5;
-    font-weight: bold;
-}
-
-.bracket {
-    color: #ffffff;
-    font-weight: bold;
-}
-
-.formula-parts {
-    margin: 0.5rem 0;
-    padding-left: 1rem;
-}
-
-.base64 {
-    color: #3a86ff;
-}
-
-.separator {
-    color: #ffbe0b;
-}
-
-.secret-input {
-    color: #ff006e;
-    background-color: rgba(255, 0, 110, 0.1);
-    padding: 0.125rem 0.25rem;
-    border-radius: 3px;
-}
-
 .secret-input-container {
     margin: 0.25rem 0;
 }

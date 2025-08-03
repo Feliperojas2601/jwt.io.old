@@ -91,20 +91,14 @@
                     <div class="part-label">VERIFY SIGNATURE</div>
                     <div class="signature-content">
                         <div class="signature-formula">
-                            <span class="algorithm">HMACSHA256</span><span class="bracket">(</span>
-                                <div class="formula-parts">
-                                    <span class="base64">base64UrlEncode(header)</span> + <span class="separator">"."</span> +<br>
-                                    <span class="base64">base64UrlEncode(payload)</span>,<br>
-                                    <div class="secret-input-container">
-                                        <input 
-                                            type="text" 
-                                            class="secret-input-field"
-                                            [value]="secret()"
-                                            (input)="onSecretInput($event)"
-                                            placeholder="your-256-bit-secret">
-                                    </div>
-                                </div>
-                            <span class="bracket">)</span>
+                            <div class="secret-input-container">
+                                <input 
+                                    type="text" 
+                                    class="secret-input-field"
+                                    [value]="secret()"
+                                    (input)="onSecretInput($event)"
+                                    placeholder="your-256-bit-secret">
+                            </div>
                         </div>
                         <div class="signature-controls">
                             <div class="signature-note">
