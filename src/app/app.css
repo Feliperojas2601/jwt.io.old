@@ -269,6 +269,42 @@ body {
     border-radius: 3px;
 }
 
+.secret-input-container {
+    margin: 0.25rem 0;
+}
+
+.secret-input-field {
+    width: 100%;
+    max-width: 300px;
+    padding: 0.5rem 0.75rem;
+    background-color: #0f0f0f;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: #ffffff;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.secret-input-field:focus {
+    border-color: #ff006e;
+    box-shadow: 0 0 0 2px rgba(255, 0, 110, 0.2);
+}
+
+.secret-input-field::placeholder {
+    color: #666;
+}
+
+.signature-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
 .signature-note {
     display: flex;
     align-items: center;
@@ -279,6 +315,37 @@ body {
 
 .signature-note input[type="checkbox"] {
     accent-color: #3a86ff;
+}
+
+.signature-status {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.signature-status.valid {
+    background-color: rgba(6, 255, 165, 0.1);
+    color: #06ffa5;
+    border-color: rgba(6, 255, 165, 0.3);
+}
+
+.signature-status.invalid {
+    background-color: rgba(255, 0, 110, 0.1);
+    color: #ff006e;
+    border-color: rgba(255, 0, 110, 0.3);
+}
+
+.signature-status.neutral {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #888;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.status-message {
+    font-size: 0.875rem;
 }
 
 .footer-content {
@@ -383,6 +450,17 @@ body {
         margin-left: 0;
         margin-top: 0.5rem;
         flex-basis: 100%;
+    }
+    
+    .signature-controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .secret-input-field {
+        max-width: 100%;
+        font-size: 0.8rem;
     }
 }
 

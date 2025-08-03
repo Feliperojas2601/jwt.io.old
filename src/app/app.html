@@ -72,13 +72,32 @@
                                 <div class="formula-parts">
                                     <span class="base64">base64UrlEncode(header)</span> + <span class="separator">"."</span> +<br>
                                     <span class="base64">base64UrlEncode(payload)</span>,<br>
-                                    <span class="secret-input">your-256-bit-secret</span>
+                                    <div class="secret-input-container">
+                                        <input 
+                                            type="text" 
+                                            class="secret-input-field"
+                                            [value]="secret()"
+                                            (input)="onSecretInput($event)"
+                                            placeholder="your-256-bit-secret">
+                                    </div>
                                 </div>
                             <span class="bracket">)</span>
                         </div>
-                        <div class="signature-note">
-                            <input type="checkbox" id="secret-encoded" checked>
-                            <label for="secret-encoded">secret base64 encoded</label>
+                        <div class="signature-controls">
+                            <div class="signature-note">
+                                <input 
+                                    type="checkbox" 
+                                    id="secret-encoded" 
+                                    [checked]="isSecretBase64()"
+                                    (change)="onSecretBase64Change($event)">
+                                <label for="secret-encoded">secret base64 encoded</label>
+                            </div>
+                            <div class="signature-status" 
+                                 [class.valid]="signatureStatus().isValid === true"
+                                 [class.invalid]="signatureStatus().isValid === false"
+                                 [class.neutral]="signatureStatus().isValid === null">
+                                <span class="status-message">{{signatureStatus().message}}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
