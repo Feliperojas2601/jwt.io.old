@@ -9,6 +9,8 @@ import { Component, signal, computed, effect } from '@angular/core';
 export class App {
     protected title = 'jwt.io.old';
     
+    protected Object = Object;
+    
     protected encodedJwt = signal('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c');
     protected secret = signal('your-256-bit-secret');
     protected isSecretBase64 = signal(false);
@@ -63,7 +65,123 @@ export class App {
         }
     });
 
-    // Método para verificar la firma de forma asíncrona
+    // Computed signal para obtener el payload con información de fechas y posiciones
+    protected payloadWithDates = computed(() => {
+        try {
+            const parts = this.encodedJwt().split('.');
+            if (parts.length >= 2 && parts[1]) {
+                const decodedPayload = this.base64UrlDecode(parts[1]);
+                const payload = JSON.parse(decodedPayload);
+                
+                const dateInfo: { [key: string]: { timestamp: number, date: string, lineNumber: number } } = {};
+                
+                // Buscar campos de fecha comunes en JWT
+                const dateFields = ['iat', 'exp', 'nbf', 'auth_time'];
+                const jsonString = JSON.stringify(payload, null, 2);
+                const lines = jsonString.split('\n');
+                
+                dateFields.forEach(field => {
+                    if (payload[field] && typeof payload[field] === 'number') {
+                        const timestamp = payload[field];
+                        const date = new Date(timestamp * 1000); // JWT timestamps están en segundos
+                        
+                        // Encontrar en qué línea aparece este campo
+                        const lineNumber = lines.findIndex(line => line.includes(`"${field}"`));
+                        
+                        dateInfo[field] = {
+                            timestamp,
+                            date: date.toLocaleString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                timeZoneName: 'short'
+                            }),
+                            lineNumber
+                        };
+                    }
+                });
+                
+                return { payload, dateInfo };
+            }
+            return { 
+                payload: { sub: "1234567890", name: "John Doe", iat: 1516239022 }, 
+                dateInfo: {
+                    iat: {
+                        timestamp: 1516239022,
+                        date: new Date(1516239022 * 1000).toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            timeZoneName: 'short'
+                        }),
+                        lineNumber: 2
+                    }
+                }
+            };
+        } catch (error) {
+            return { 
+                payload: { sub: "1234567890", name: "John Doe", iat: 1516239022 }, 
+                dateInfo: {
+                    iat: {
+                        timestamp: 1516239022,
+                        date: new Date(1516239022 * 1000).toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            timeZoneName: 'short'
+                        }),
+                        lineNumber: 2
+                    }
+                }
+            };
+        }
+    });
+
+    // Función auxiliar para formatear fechas JWT
+    protected formatJwtDate(timestamp: number): string {
+        const date = new Date(timestamp * 1000);
+        const now = new Date();
+        const diffMs = date.getTime() - now.getTime();
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        
+        let relativeTime = '';
+        if (diffDays > 0) {
+            relativeTime = `(in ${diffDays} days)`;
+        } else if (diffDays < 0) {
+            relativeTime = `(${Math.abs(diffDays)} days ago)`;
+        } else {
+            relativeTime = '(today)';
+        }
+        
+        return `${date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZoneName: 'short'
+        })} ${relativeTime}`;
+    }
+
+    // Método para obtener la descripción del campo de fecha
+    protected getDateFieldDescription(field: string): string {
+        const descriptions: { [key: string]: string } = {
+            'iat': 'Issued At - When the token was created',
+            'exp': 'Expiration - When the token expires',
+            'nbf': 'Not Before - Token is not valid before this time',
+            'auth_time': 'Authentication Time - When authentication occurred'
+        };
+        return descriptions[field] || 'Date field';
+    }
     private async verifySignatureAsync(token: string, secret: string): Promise<void> {
         if (!token || !secret) {
             this.signatureVerificationResult.set({ isValid: null, message: 'Token or secret missing' });

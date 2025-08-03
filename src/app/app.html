@@ -56,6 +56,24 @@
                 <div class="decoded-part payload-part">
                     <div class="part-label">PAYLOAD: DATA</div>
                     <div class="json-content">
+                        <div class="json-display-container">
+                            <pre class="json-display">{{payloadJson()}}</pre>
+                            <div class="date-tooltips">
+                                @for (item of Object.entries(payloadWithDates().dateInfo); track item[0]) {
+                                    <div class="date-tooltip" 
+                                         [attr.data-field]="item[0]"
+                                         [style.top.em]="item[1].lineNumber * 1.5"
+                                         [style.left.em]="12"
+                                         [title]="getDateFieldDescription(item[0]) + '\n' + formatJwtDate(item[1].timestamp)">
+                                        <span class="tooltip-icon">📅</span>
+                                        <div class="tooltip-content">
+                                            <div class="tooltip-title">{{getDateFieldDescription(item[0])}}</div>
+                                            <div class="tooltip-date">{{formatJwtDate(item[1].timestamp)}}</div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
                         <textarea 
                             class="json-input"
                             [value]="payloadJson()"
