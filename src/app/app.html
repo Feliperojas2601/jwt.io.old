@@ -1,96 +1,73 @@
-<!-- JWT.IO Old - Inspired by the classic jwt.io interface -->
 <div class="jwt-container">
-  <!-- Header -->
-  <header class="jwt-header">
-    <div class="header-content">
-      <div class="logo-section">
-        <div class="logo-icon">
-          <svg viewBox="0 0 24 24" width="32" height="32">
-            <circle cx="12" cy="12" r="3" fill="#ff006e"/>
-            <circle cx="6" cy="12" r="3" fill="#8338ec"/>
-            <circle cx="18" cy="12" r="3" fill="#3a86ff"/>
-            <circle cx="12" cy="6" r="3" fill="#06ffa5"/>
-            <circle cx="12" cy="18" r="3" fill="#ffbe0b"/>
-          </svg>
-        </div>
-        <h1 class="logo-text">JWT.IO.OLD</h1>
-      </div>
-      <nav class="nav-menu">
-        <a href="#" class="nav-link">Debugger</a>
-        <a href="#" class="nav-link">Libraries</a>
-        <a href="#" class="nav-link">Introduction</a>
-        <a href="#" class="nav-link">Ask</a>
-      </nav>
-      <div class="auth-section">
-        <span class="crafted-by">Crafted by</span>
-        <div class="auth0-logo">Auth0</div>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Content -->
-  <main class="jwt-main">
-    <div class="jwt-content">
-      <!-- Encoded Section -->
-      <section class="encoded-section">
-        <div class="section-header">
-          <h2>Encoded</h2>
-          <span class="section-subtitle">PASTE A TOKEN HERE</span>
-        </div>
-        <div class="encoded-content">
-          <textarea 
-            class="jwt-input" 
-            placeholder="Paste your JWT token here..."
-            [value]="encodedJwt()"
-            (input)="onJwtInput($event)">
-          </textarea>
-        </div>
-      </section>
-
-      <!-- Decoded Section -->
-      <section class="decoded-section">
-        <div class="section-header">
-          <h2>Decoded</h2>
-          <span class="section-subtitle">EDIT THE PAYLOAD AND SECRET</span>
-        </div>
-        
-        <!-- Header -->
-        <div class="decoded-part header-part">
-          <div class="part-label">HEADER: ALGORITHM & TOKEN TYPE</div>
-          <div class="json-content">
-            <pre class="json-display">{{headerJson()}}</pre>
-          </div>
-        </div>
-
-        <!-- Payload -->
-        <div class="decoded-part payload-part">
-          <div class="part-label">PAYLOAD: DATA</div>
-          <div class="json-content">
-            <pre class="json-display">{{payloadJson()}}</pre>
-          </div>
-        </div>
-
-        <!-- Verify Signature -->
-        <div class="decoded-part signature-part">
-          <div class="part-label">VERIFY SIGNATURE</div>
-          <div class="signature-content">
-            <div class="signature-formula">
-              <span class="algorithm">HMACSHA256</span><span class="bracket">(</span>
-              <div class="formula-parts">
-                <span class="base64">base64UrlEncode(header)</span> + <span class="separator">"."</span> +<br>
-                <span class="base64">base64UrlEncode(payload)</span>,<br>
-                <span class="secret-input">your-256-bit-secret</span>
-              </div>
-              <span class="bracket">)</span>
+    <header class="jwt-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" width="32" height="32">
+                        <circle cx="12" cy="12" r="3" fill="#ff006e"/>
+                        <circle cx="6" cy="12" r="3" fill="#8338ec"/>
+                        <circle cx="18" cy="12" r="3" fill="#3a86ff"/>
+                        <circle cx="12" cy="6" r="3" fill="#06ffa5"/>
+                        <circle cx="12" cy="18" r="3" fill="#ffbe0b"/>
+                    </svg>
+                </div>
+                <h1 class="logo-text">JWT.IO.OLD</h1>
             </div>
-            <div class="signature-note">
-              <input type="checkbox" id="secret-encoded" checked>
-              <label for="secret-encoded">secret base64 encoded</label>
-            </div>
-          </div>
         </div>
-      </section>
-    </div>
-  </main>
+    </header>
+    <main class="jwt-main">
+        <div class="jwt-content">
+            <section class="encoded-section">
+                <div class="section-header">
+                    <h2>Encoded</h2>
+                    <span class="section-subtitle">PASTE A TOKEN HERE</span>
+                </div>
+                <div class="encoded-content">
+                    <textarea 
+                        class="jwt-input" 
+                        placeholder="Paste your JWT token here..."
+                        [value]="encodedJwt()"
+                        (input)="onJwtInput($event)">
+                    </textarea>
+                </div>
+            </section>
+            <section class="decoded-section">
+                <div class="section-header">
+                    <h2>Decoded</h2>
+                    <span class="section-subtitle">EDIT THE PAYLOAD AND SECRET</span>
+                </div>
+                <div class="decoded-part header-part">
+                    <div class="part-label">HEADER: ALGORITHM & TOKEN TYPE</div>
+                    <div class="json-content">
+                        <pre class="json-display">{{headerJson()}}</pre>
+                    </div>
+                </div>
+                <div class="decoded-part payload-part">
+                    <div class="part-label">PAYLOAD: DATA</div>
+                    <div class="json-content">
+                        <pre class="json-display">{{payloadJson()}}</pre>
+                    </div>
+                </div>
+                <div class="decoded-part signature-part">
+                    <div class="part-label">VERIFY SIGNATURE</div>
+                    <div class="signature-content">
+                        <div class="signature-formula">
+                            <span class="algorithm">HMACSHA256</span><span class="bracket">(</span>
+                                <div class="formula-parts">
+                                    <span class="base64">base64UrlEncode(header)</span> + <span class="separator">"."</span> +<br>
+                                    <span class="base64">base64UrlEncode(payload)</span>,<br>
+                                    <span class="secret-input">your-256-bit-secret</span>
+                                </div>
+                            <span class="bracket">)</span>
+                        </div>
+                        <div class="signature-note">
+                            <input type="checkbox" id="secret-encoded" checked>
+                            <label for="secret-encoded">secret base64 encoded</label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
 </div>
       
