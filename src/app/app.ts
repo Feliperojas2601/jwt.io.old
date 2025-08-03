@@ -15,7 +15,6 @@ export class App {
     protected secret = signal('your-256-bit-secret');
     protected isSecretBase64 = signal(false);
     protected signatureVerificationResult = signal<{isValid: boolean | null, message: string}>({ isValid: null, message: 'Enter secret to verify' });
-    protected isSigning = signal(false);
 
     constructor() {
         effect(() => {
@@ -360,11 +359,6 @@ export class App {
                 const secret = this.secret().trim();
                 if (secret) {
                     const dataToSign = `${headerPart}.${newPayloadPart}`;
-                    
-                    // Indicar que estamos firmando
-                    this.isSigning.set(true);
-                    
-                    // Generar nueva firma de forma asíncrona
                     this.generateHmacSignature(dataToSign, secret)
                         .then(newSignature => {
                             const newJwt = `${headerPart}.${newPayloadPart}.${newSignature}`;
@@ -372,15 +366,10 @@ export class App {
                         })
                         .catch(error => {
                             console.warn('Failed to sign token:', error);
-                            // Si falla la firma, usar la signature anterior (será inválida)
                             const newJwt = `${headerPart}.${newPayloadPart}.${parts[2]}`;
                             this.encodedJwt.set(newJwt);
-                        })
-                        .finally(() => {
-                            this.isSigning.set(false);
                         });
                 } else {
-                    // Sin secret, mantener la signature anterior (será inválida)
                     const newJwt = `${headerPart}.${newPayloadPart}.${parts[2]}`;
                     this.encodedJwt.set(newJwt);
                 }
@@ -455,9 +444,6 @@ export class App {
             const secret = this.secret().trim();
             if (secret) {
                 const dataToSign = `${parts[0]}.${parts[1]}`;
-                
-                this.isSigning.set(true);
-                
                 this.generateHmacSignature(dataToSign, secret)
                     .then(newSignature => {
                         const newJwt = `${parts[0]}.${parts[1]}.${newSignature}`;
@@ -465,9 +451,6 @@ export class App {
                     })
                     .catch(error => {
                         console.warn('Failed to re-sign token:', error);
-                    })
-                    .finally(() => {
-                        this.isSigning.set(false);
                     });
             }
         }
