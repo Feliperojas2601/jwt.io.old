@@ -93,6 +93,40 @@ body {
     height: fit-content;
 }
 
+.encoded-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.jwt-status {
+    margin-left: auto;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.jwt-status.valid {
+    background-color: rgba(6, 255, 165, 0.1);
+    color: #06ffa5;
+    border: 1px solid rgba(6, 255, 165, 0.3);
+}
+
+.jwt-status.invalid {
+    background-color: rgba(255, 0, 110, 0.1);
+    color: #ff006e;
+    border: 1px solid rgba(255, 0, 110, 0.3);
+}
+
+.jwt-status .status-text {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
 .jwt-input {
     width: 100%;
     height: 400px;
@@ -303,6 +337,21 @@ body {
     .json-display,
     .signature-formula {
         font-size: 0.8rem;
+    }
+    
+    .encoded-controls {
+        gap: 0.5rem;
+    }
+    
+    .control-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    
+    .jwt-status {
+        margin-left: 0;
+        margin-top: 0.5rem;
+        flex-basis: 100%;
     }
 }
 
