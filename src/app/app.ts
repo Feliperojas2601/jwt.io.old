@@ -64,29 +64,21 @@ export class App {
         }
     });
 
-    // Computed signal para obtener el payload con información de fechas y posiciones
     protected payloadWithDates = computed(() => {
         try {
             const parts = this.encodedJwt().split('.');
             if (parts.length >= 2 && parts[1]) {
                 const decodedPayload = this.base64UrlDecode(parts[1]);
                 const payload = JSON.parse(decodedPayload);
-                
                 const dateInfo: { [key: string]: { timestamp: number, date: string, lineNumber: number } } = {};
-                
-                // Buscar campos de fecha comunes en JWT
                 const dateFields = ['iat', 'exp', 'nbf', 'auth_time'];
                 const jsonString = JSON.stringify(payload, null, 2);
                 const lines = jsonString.split('\n');
-                
                 dateFields.forEach(field => {
                     if (payload[field] && typeof payload[field] === 'number') {
                         const timestamp = payload[field];
-                        const date = new Date(timestamp * 1000); // JWT timestamps están en segundos
-                        
-                        // Encontrar en qué línea aparece este campo
+                        const date = new Date(timestamp * 1000);
                         const lineNumber = lines.findIndex(line => line.includes(`"${field}"`));
-                        
                         dateInfo[field] = {
                             timestamp,
                             date: date.toLocaleString('en-US', {
@@ -145,13 +137,11 @@ export class App {
         }
     });
 
-    // Función auxiliar para formatear fechas JWT
     protected formatJwtDate(timestamp: number): string {
         const date = new Date(timestamp * 1000);
         const now = new Date();
         const diffMs = date.getTime() - now.getTime();
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        
         let relativeTime = '';
         if (diffDays > 0) {
             relativeTime = `(in ${diffDays} days)`;
@@ -160,7 +150,6 @@ export class App {
         } else {
             relativeTime = '(today)';
         }
-        
         return `${date.toLocaleString('en-US', {
             year: 'numeric',
             month: 'short',
@@ -171,7 +160,6 @@ export class App {
         })} ${relativeTime}`;
     }
 
-    // Método para obtener la descripción del campo de fecha
     protected getDateFieldDescription(field: string): string {
         const descriptions: { [key: string]: string } = {
             'iat': 'Issued At - When the token was created',
@@ -186,35 +174,25 @@ export class App {
             this.signatureVerificationResult.set({ isValid: null, message: 'Token or secret missing' });
             return;
         }
-
         const parts = token.split('.');
         if (parts.length !== 3) {
             this.signatureVerificationResult.set({ isValid: false, message: 'Invalid token format' });
             return;
         }
-
         try {
-            // Decodificar el header para verificar el algoritmo
             const header = JSON.parse(this.base64UrlDecode(parts[0]));
-            
             if (header.alg !== 'HS256') {
                 this.signatureVerificationResult.set({ isValid: false, message: `Algorithm ${header.alg} not supported` });
                 return;
             }
-
-            // Crear los datos a verificar (header.payload)
             const dataToVerify = `${parts[0]}.${parts[1]}`;
             const signature = parts[2];
-
-            // Verificar la firma
             const isValid = await this.verifyHmacSignature(dataToVerify, signature, secret);
-            
             if (isValid) {
                 this.signatureVerificationResult.set({ isValid: true, message: 'Signature verified' });
             } else {
                 this.signatureVerificationResult.set({ isValid: false, message: 'Invalid signature' });
             }
-
         } catch (error) {
             this.signatureVerificationResult.set({ isValid: false, message: 'Verification failed' });
         }
@@ -231,21 +209,11 @@ export class App {
         return parts.length === 3 && parts.every(part => part.length > 0);
     });
 
-    private base64Decode(str: string): string {
-        try {
-            return atob(str);
-        } catch (error) {
-            throw new Error('Invalid base64 string');
-        }
-    }
-
-    // Función para convertir string a ArrayBuffer
     private stringToArrayBuffer(str: string): ArrayBuffer {
         const encoder = new TextEncoder();
         return encoder.encode(str);
     }
 
-    // Función para convertir base64 a ArrayBuffer
     private base64ToArrayBuffer(base64: string): ArrayBuffer {
         const binaryString = atob(base64);
         const bytes = new Uint8Array(binaryString.length);
@@ -255,15 +223,11 @@ export class App {
         return bytes.buffer;
     }
 
-    // Función para generar firma HMAC usando Web Crypto API
     private async generateHmacSignature(data: string, secret: string): Promise<string> {
         try {
-            // Obtener el secret como ArrayBuffer
             const secretBuffer = this.isSecretBase64() 
                 ? this.base64ToArrayBuffer(secret)
                 : this.stringToArrayBuffer(secret);
-
-            // Crear la clave HMAC
             const key = await crypto.subtle.importKey(
                 'raw',
                 secretBuffer,
@@ -271,40 +235,30 @@ export class App {
                 false,
                 ['sign']
             );
-
-            // Generar la firma
             const signature = await crypto.subtle.sign(
                 'HMAC',
                 key,
                 this.stringToArrayBuffer(data)
             );
-
-            // Convertir a base64url
             const signatureArray = new Uint8Array(signature);
             let binaryString = '';
             for (let i = 0; i < signatureArray.byteLength; i++) {
                 binaryString += String.fromCharCode(signatureArray[i]);
             }
-            
             return btoa(binaryString)
                 .replace(/\+/g, '-')
                 .replace(/\//g, '_')
                 .replace(/=/g, '');
-
         } catch (error) {
             throw new Error('Failed to generate signature');
         }
     }
 
-    // Función para verificar firma HMAC usando Web Crypto API
     private async verifyHmacSignature(data: string, signature: string, secret: string): Promise<boolean> {
         try {
-            // Obtener el secret como ArrayBuffer
             const secretBuffer = this.isSecretBase64() 
                 ? this.base64ToArrayBuffer(secret)
                 : this.stringToArrayBuffer(secret);
-
-            // Crear la clave HMAC
             const key = await crypto.subtle.importKey(
                 'raw',
                 secretBuffer,
@@ -312,22 +266,17 @@ export class App {
                 false,
                 ['verify']
             );
-
-            // Convertir la firma de base64url a ArrayBuffer
             const signatureBuffer = this.base64ToArrayBuffer(
                 signature.replace(/-/g, '+').replace(/_/g, '/').padEnd(
                     signature.length + (4 - signature.length % 4) % 4, '='
                 )
             );
-
-            // Verificar la firma
             const isValid = await crypto.subtle.verify(
                 'HMAC',
                 key,
                 signatureBuffer,
                 this.stringToArrayBuffer(data)
             );
-
             return isValid;
         } catch (error) {
             return false;
@@ -346,16 +295,11 @@ export class App {
         const newPayloadJson = target.value;
         
         try {
-            // Validar que el JSON sea válido
             const payloadObj = JSON.parse(newPayloadJson);
-            
-            // Obtener las partes actuales del JWT
             const parts = this.encodedJwt().split('.');
             if (parts.length === 3) {
                 const headerPart = parts[0];
                 const newPayloadPart = this.base64UrlEncode(JSON.stringify(payloadObj));
-                
-                // Generar nueva firma si tenemos un secret
                 const secret = this.secret().trim();
                 if (secret) {
                     const dataToSign = `${headerPart}.${newPayloadPart}`;
@@ -384,21 +328,14 @@ export class App {
         const newHeaderJson = target.value;
         
         try {
-            // Validar que el JSON sea válido
             const headerObj = JSON.parse(newHeaderJson);
-            
-            // Obtener las partes actuales del JWT
             const parts = this.encodedJwt().split('.');
             if (parts.length === 3) {
                 const newHeaderPart = this.base64UrlEncode(JSON.stringify(headerObj));
                 const payloadPart = parts[1];
-                
-                // Generar nueva firma si tenemos un secret
                 const secret = this.secret().trim();
                 if (secret) {
                     const dataToSign = `${newHeaderPart}.${payloadPart}`;
-                    
-                    // Generar nueva firma de forma asíncrona
                     this.generateHmacSignature(dataToSign, secret)
                         .then(newSignature => {
                             const newJwt = `${newHeaderPart}.${payloadPart}.${newSignature}`;
@@ -406,12 +343,10 @@ export class App {
                         })
                         .catch(error => {
                             console.warn('Failed to sign token:', error);
-                            // Si falla la firma, usar la signature anterior (será inválida)
                             const newJwt = `${newHeaderPart}.${payloadPart}.${parts[2]}`;
                             this.encodedJwt.set(newJwt);
                         });
                 } else {
-                    // Sin secret, mantener la signature anterior (será inválida)
                     const newJwt = `${newHeaderPart}.${payloadPart}.${parts[2]}`;
                     this.encodedJwt.set(newJwt);
                 }
@@ -430,14 +365,11 @@ export class App {
         const target = event.target as HTMLInputElement;
         const newSecret = target.value;
         this.secret.set(newSecret);
-        
-        // Re-firmar el token si tenemos un JWT válido y un secret
         if (newSecret.trim() && this.isValidJwt()) {
             this.resignToken();
         }
     }
 
-    // Método para re-firmar el token actual
     private resignToken(): void {
         const parts = this.encodedJwt().split('.');
         if (parts.length === 3) {
@@ -459,8 +391,6 @@ export class App {
     protected onSecretBase64Change(event: Event): void {
         const target = event.target as HTMLInputElement;
         this.isSecretBase64.set(target.checked);
-        
-        // Re-firmar el token cuando cambie el tipo de encoding del secret
         if (this.secret().trim() && this.isValidJwt()) {
             this.resignToken();
         }
