@@ -56,7 +56,12 @@
                 <div class="decoded-part payload-part">
                     <div class="part-label">PAYLOAD: DATA</div>
                     <div class="json-content">
-                        <pre class="json-display">{{payloadJson()}}</pre>
+                        <textarea 
+                            class="json-input"
+                            [value]="payloadJson()"
+                            (input)="onPayloadInput($event)"
+                            placeholder="Payload JSON">
+                        </textarea>
                     </div>
                 </div>
                 <div class="decoded-part signature-part">

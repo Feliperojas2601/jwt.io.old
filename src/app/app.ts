@@ -58,6 +58,31 @@ export class App {
         return parts.length === 3 && parts.every(part => part.length > 0);
     });
 
+    private base64UrlEncode(str: string): string {
+        return btoa(str)
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=/g, '');
+    }
+
+    protected onPayloadInput(event: Event): void {
+        try {
+            const target = event.target as HTMLTextAreaElement;
+            const newPayloadJson = target.value;
+            const payloadObj = JSON.parse(newPayloadJson);
+            const parts = this.encodedJwt().split('.');
+            if (parts.length === 3) {
+                const headerPart = parts[0];
+                const newPayloadPart = this.base64UrlEncode(JSON.stringify(payloadObj));
+                const signaturePart = parts[2];
+                const newJwt = `${headerPart}.${newPayloadPart}.${signaturePart}`;
+                this.encodedJwt.set(newJwt);
+            }
+        } catch (error) {
+            console.warn('Invalid JSON in payload');
+        }
+    }
+
     protected onJwtInput(event: Event): void {
         const target = event.target as HTMLTextAreaElement;
         this.encodedJwt.set(target.value.trim());

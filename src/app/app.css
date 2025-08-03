@@ -190,6 +190,32 @@ body {
     margin: 0;
 }
 
+.json-input {
+    width: 100%;
+    min-height: 120px;
+    background-color: #0f0f0f;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 0.75rem;
+    color: #ffffff;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+.json-input:focus {
+    border-color: #555;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.json-input::placeholder {
+    color: #666;
+}
+
 .header-part {
     border-left: 4px solid #ff006e;
 }
@@ -339,6 +365,11 @@ body {
         font-size: 0.8rem;
     }
     
+    .json-input {
+        min-height: 100px;
+        font-size: 0.8rem;
+    }
+    
     .encoded-controls {
         gap: 0.5rem;
     }
@@ -380,23 +411,28 @@ body {
 }
 
 .jwt-input:focus,
+.json-input:focus,
 .nav-link:hover {
     transform: translateY(-1px);
 }
 
-.jwt-input::-webkit-scrollbar {
+.jwt-input::-webkit-scrollbar,
+.json-input::-webkit-scrollbar {
     width: 8px;
 }
 
-.jwt-input::-webkit-scrollbar-track {
+.jwt-input::-webkit-scrollbar-track,
+.json-input::-webkit-scrollbar-track {
     background: #0f0f0f;
 }
 
-.jwt-input::-webkit-scrollbar-thumb {
+.jwt-input::-webkit-scrollbar-thumb,
+.json-input::-webkit-scrollbar-thumb {
     background: #333;
     border-radius: 4px;
 }
 
-.jwt-input::-webkit-scrollbar-thumb:hover {
+.jwt-input::-webkit-scrollbar-thumb:hover,
+.json-input::-webkit-scrollbar-thumb:hover {
     background: #555;
 }
